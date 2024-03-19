@@ -40,12 +40,12 @@ df = pd.DataFrame(db["twits"].find({}))
 
 
 
-#%% get only messages with at meast 3 words 
+#%% get only messages with at least 3 words 
 
 
 
 
-#%% Deal with emojis 
+#%% Organize messages by date ie 4pm t-1 to 4pm t 
 
 
 
@@ -54,4 +54,4 @@ df = pd.DataFrame(db["twits"].find({}))
 
 
 
-#%% Get balanced database 
+#%% Force balanced database 
