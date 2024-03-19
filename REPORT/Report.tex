@@ -1,0 +1,129 @@
+\documentclass[hidelinks,11pts]{article}
+\usepackage[export]{adjustbox}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[title,titletoc]{appendix}
+\usepackage{array}
+\usepackage[english]{babel}
+\usepackage{bbm}
+\usepackage{blindtext}
+\usepackage{bookmark}
+\usepackage{booktabs}
+\usepackage{cancel}
+\usepackage{caption}
+\usepackage{csquotes}
+\usepackage{enumerate}
+\usepackage{enumitem}
+\usepackage{epigraph}
+\usepackage[left]{eurosym}
+\usepackage{float}
+\usepackage[bottom]{footmisc}
+\usepackage[margin=0.8in]{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{indentfirst}
+\usepackage{lscape}
+\usepackage{listings}
+\usepackage{mathtools}
+\usepackage{mdframed}
+\usepackage{multirow}
+\usepackage{multicol}
+\usepackage[sort]{natbib}
+\usepackage{parskip}
+\usepackage{setspace}
+\usepackage{subcaption}
+\usepackage{titlesec}
+\usepackage{tgpagella}
+\usepackage{varwidth}
+\usepackage{verbatim} %comment block
+\usepackage{wrapfig}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{xltabular}
+
+\renewcommand{\epigraphsize}{\normalsize}
+\setlength{\epigraphwidth}{0.7\textwidth}
+\renewcommand{\textflush}{flushright}
+\renewcommand{\sourceflush}{flushright}
+
+\renewcommand\appendixpagename{Mathematical Appendix}
+
+\renewcommand{\baselinestretch}{1.15} % interligne 
+
+\hypersetup{
+    colorlinks=true, 
+    urlcolor= Violet, 
+    linkcolor=Black, 
+    citecolor=Blue, 
+    filecolor = Blue
+    } 
+
+%\usepackage{natbib}
+\bibliographystyle{plainnat}
+%\bibdata{My Library.bib}
+%\usepackage[backend=biber, style=authoryear-icomp]{biblatex}
+
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\Prb}{\mathbb{P}}
+\DeclareMathOperator{\R}{\mathbb{R}}
+\DeclareMathOperator{\N}{\mathbb{N}}
+\DeclareMathOperator{\1}{\mathbbm{1}}
+\newcommand{\ind}{\perp\!\!\!\!\perp}
+
+%code snippets 
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle}
+
+\titleformat{\part}{\centering\normalfont\Large\bfseries}{\partname\hspace{5pt}\thepart\hspace{5pt}}{5pt}{--\ }
+
+\titleformat{\part}{\centering\normalfont\Large\bfseries}{\partname\hspace{5pt}\thepart\hspace{5pt}}{5pt}{--\ }
+
+\makeatletter
+\def\@fnsymbol#1{\ensuremath{\ifcase#1\or \dagger\or \ddagger\or
+   \mathsection\or \mathparagraph\or \|\or **\or \dagger\dagger
+   \or \ddagger\ddagger \else\@ctrerr\fi}}
+    \makeatother
+
+
+\begin{document}
+
+        \title{\scshape{Applied Big Data Analytics\\
+        Replication - Renault 2019}}
+        \author{
+            Meriem Benidir\\
+            Natalia Cárdenas F.\\
+            Luis Miguel Fonseca\\
+            Stéphane Mvondo}
+        \date{\today}
+        \maketitle 
+
+stuff
+
+%\newpage
+%\bibliography{../MyLibrary.bib}
+
+
+
+\end{document}
