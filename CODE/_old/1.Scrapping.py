@@ -42,9 +42,25 @@ db['twits'].create_index([("id",  pymongo.ASCENDING)], unique=True)
 
 headers = {'User-Agent': 'Mozilla/5.0 Chrome/39.0.2171.95 Safari/537.36'}
 
+initial_docs = db["twits"].count_documents({})
+initial_time = time.time()
+
+#crash BRK 
+maxid= 251813842 # need change range i to start with 1 to restart
+maxid= 49003918 # need change range i to start with 1 to restart
+maxid= 13365320
+maxid= 45403059
+maxid= 3942038
+maxid= 2978814
+maxid= 1177072
+maxid= 49003918
+
+
+
 for tick in ["BRK.B", "JPM", "BAC", "MS", "WFC", "GS"]:
     
-    for i in range(0, 10000000):
+    for i in range(1, 10000000):
+        
         if i == 0:  #get last batch of twits about Apple (latest id)
             url = f"https://api.stocktwits.com/api/2/streams/symbol/{tick}.json"
         else:       #get following batches of size 30
@@ -58,7 +74,7 @@ for tick in ["BRK.B", "JPM", "BAC", "MS", "WFC", "GS"]:
         maxid = data["cursor"]["max"] 
         
         #time sleep, avoid being blocked by StockTwits
-        time.sleep(1)
+        time.sleep(0.3)
     
         #iterate over messages and fill the information in dictionary to build db on mongo 
         for m in data["messages"]:
@@ -87,10 +103,16 @@ for tick in ["BRK.B", "JPM", "BAC", "MS", "WFC", "GS"]:
         
         if date < datetime(2009,12,31): 
             break 
+        
+final_docs = db["twits"].count_documents({})
+final_time = time.time()
 
-del data, date, headers, i, tick, m, maxid, r, sentiment, uri, url, client, content, twitid
+delta_docs = final_docs-initial_docs
+delta_time = final_time - initial_time
+
+#del data, date, headers, i, tick, m, maxid, r, sentiment, uri, url, client, content, twitid
  
 
 #%% Call the db from MongoDB 
-df= pd.DataFrame(list(db['twits'].find({"sentiment": {"$ne": ""}})))
+#df= pd.DataFrame(list(db['twits'].find({"sentiment": {"$ne": ""}})))
 
