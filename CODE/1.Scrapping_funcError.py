@@ -48,7 +48,12 @@ db['twits'].create_index([("id",  pymongo.ASCENDING)], unique=True)
 
 def scrapping(collection, tickers_list, last_day, t, error_t):
     """
-    Scrapping function. It allows to get the messages from StockTwits and store them in a MongoDB collection
+    Scrapping function. It allows to get the messages from StockTwits and store them in a MongoDB collection. 
+    
+    To avoid being blocked by the StockTwits platform in case of scrapping large volumes of messages, the function allows to include sleeping times. 
+    A first one, t, is executed after each json file scrapped. To avoid a "large" t that makes the function slow, another sleeping time, error_t, is executed in case of having an error in the scrapping before resuming the scrapping where it stopped.
+    
+    The end of the execution comes if all twits after a certain date last_day have been collected, or if all previous messages are.  
     
     Parameters
     ----------
@@ -85,19 +90,14 @@ def scrapping(collection, tickers_list, last_day, t, error_t):
 
             if maxid is None:                                                  #get latest batch of twits
                 url = f"https://api.stocktwits.com/api/2/streams/symbol/{tick}.json"
-                prev_id = 999999999999999999999999999                          #initiate prev_id with very large number
-#                if tick == "BRK.B": #error to manage
-#                    url = f"https://api.stocktwits.com/api/2/streams/symbol/{tick}.json?max=" + str(49003918)
-#                else:   
-#                    url = f"https://api.stocktwits.com/api/2/streams/symbol/{tick}.json"
-            
+                prev_id = 999999999999999999999999999                          #initiate prev_id with very large number            
             else:                                                              #get following batches of size 30
                 url = f"https://api.stocktwits.com/api/2/streams/symbol/{tick}.json?max=" + str(maxid)
                 prev_id = maxid 
                 
             print(url)                                                         #allows to see in the terminal the advancement of the code
             
-            try:                                                               #try to get the data from StockTwits
+            try:                                                               #using this try except allows me to avoid being blocked by the platfom while keeping t small
                 r = requests.get(url, headers=headers)                         #scrapping with requests 
                 data = json.loads(r.content)
             
@@ -142,12 +142,12 @@ def scrapping(collection, tickers_list, last_day, t, error_t):
 
     #get final db lenght and time + deltas for benchmarking
     final_docs = collection.count_documents({})
-    final_time = time.time
+    final_time = time.time()
     
     delta_docs = final_docs-initial_docs
     delta_time = final_time-initial_time
     
-    print(f"{collection} has been successfully updated with {delta_docs} new documents in {delta_time}:)")
+    print(f"{collection} has been successfully updated with {delta_docs} new documents in {delta_time} seconds:)")
     return delta_docs, delta_time
         
 
@@ -160,10 +160,26 @@ error_t = 15
 collect_mongo = db["twits"]
 
 new_docs, time_ellapsed = scrapping(collect_mongo, stock_list, end_day, t, error_t)
+# db with these 6 stocks is only about 800k, to get to the million messages we rerun the function with 2 new tickers 
 
+stock_list = ["SCHW", "C"]
+new_docs, time_ellapsed = scrapping(collect_mongo, stock_list, end_day, t, error_t)
+# we're at 925k, add another one 
 
-docs = []
-times = []
+stock_list = ["UBS"]
+new_docs, time_ellapsed = scrapping(collect_mongo, stock_list, end_day, t, error_t)
+#937k, another is needed but store the benchmarking output 
 
-docs.append(new_docs)
-times.append(time_ellapsed)
+benchmarks = {'UBS':{'time':time_ellapsed, "docs":new_docs}}
+
+stock_list = ["HSBC"]
+new_docs, time_ellapsed = scrapping(collect_mongo, stock_list, end_day, t, error_t) #945k
+benchmarks["HSBC"] = {'time':time_ellapsed, "docs":new_docs}
+
+stock_list = ["ING", "BCS", "DB"]
+new_docs, time_ellapsed = scrapping(collect_mongo, stock_list, end_day, t, error_t) #945k
+benchmarks["ING, BCS, DB"] = {'time':time_ellapsed, "docs":new_docs}
+
+stock_list = ["BBVA", "BNPQY"]
+new_docs, time_ellapsed = scrapping(collect_mongo, stock_list, end_day, t, error_t) #945k
+benchmarks["BBVA, BNPQY"]] = {'time':time_ellapsed, "docs":new_docs}
