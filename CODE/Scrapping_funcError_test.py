@@ -9,39 +9,12 @@ For benchmarking purposes (if any), the function returns the number of new docum
 @author: ncardenafria
 """
 #Basic packages 
-import pandas as pd
-import os
 import time 
 from datetime import datetime
-
-#Mongo DB 
-import pymongo 
-from pymongo.mongo_client import MongoClient
 
 #scrapping from StockTwits 
 import json 
 import requests 
-
-os.chdir("C:/Users/ncardenafria/Documents/GitHub/ReplicationRenault2020/")
-
-#%% Connect to MongoDB and create the DB
-#mongodb password stocktwits
-uri = "mongodb+srv://nataliacardenas:stocktwits@twits.mgv4dfh.mongodb.net/?retryWrites=true&w=majority&appName=Twits"
-
-# Create a new client and connect to the server
-client = MongoClient(uri)
-
-# Send a ping to confirm a successful connection
-try:
-    client.admin.command('ping')
-    print("Pinged your deployment. You successfully connected to MongoDB!")
-except Exception as e:
-    print(e)
-    
-    
-#create db 
-db = client['StockTwits']
-db['twits'].create_index([("id",  pymongo.ASCENDING)], unique=True)
 
 
 #%% Define scrapping function for StockTwits
@@ -155,41 +128,3 @@ def scrapping(collection, tickers_list, last_day, t, error_t):
         
 
 
-#%% Call the function function
-stock_list = ["BRK.B", "JPM", "BAC", "MS", "WFC", "GS"]
-end_day = datetime(2009,12,31)
-t=0.02
-error_t = 15
-collect_mongo = db["twits"]
-
-new_docs, time_ellapsed = scrapping(collect_mongo, stock_list, end_day, t, error_t)
-# db with these 6 stocks is only about 800k, to get to the million messages we rerun the function with 2 new tickers 
-
-stock_list = ["SCHW", "C"]
-new_docs, time_ellapsed = scrapping(collect_mongo, stock_list, end_day, t, error_t)
-# we're at 925k, add another one 
-
-stock_list = ["UBS"]
-new_docs, time_ellapsed = scrapping(collect_mongo, stock_list, end_day, t, error_t)
-#937k, another is needed but store the benchmarking output 
-
-benchmarks = {'UBS':{'time':time_ellapsed, "docs":new_docs}}
-
-stock_list = ["HSBC"]
-new_docs, time_ellapsed = scrapping(collect_mongo, stock_list, end_day, t, error_t) #945k
-benchmarks["HSBC"] = {'time':time_ellapsed, "docs":new_docs}
-
-stock_list = ["ING", "BCS", "DB"]
-new_docs, time_ellapsed = scrapping(collect_mongo, stock_list, end_day, t, error_t) 
-benchmarks["ING, BCS, DB"] = {'time':time_ellapsed, "docs":new_docs}
-
-stock_list = ["BBVA", "BNPQY"]
-new_docs, time_ellapsed = scrapping(collect_mongo, stock_list, end_day, t, error_t) #997k 
-benchmarks["BBVA, BNPQY"] = {'time':time_ellapsed, "docs":new_docs} 
-
-stock_list = ["SMFG", "MUFG"]
-new_docs, time_ellapsed = scrapping(collect_mongo, stock_list, end_day, t, error_t) 
-benchmarks["SMFG, MUFG"] = {'time':time_ellapsed, "docs":new_docs} #1003k
-
-with open('REPORT/TABLES/benchmark_scrap.txt', 'w') as convert_file: 
-     convert_file.write(json.dumps(benchmarks))
