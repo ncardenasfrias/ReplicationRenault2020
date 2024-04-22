@@ -22,7 +22,8 @@ import json
 import requests 
 
 
-os.chdir("C:/Users/ncardenafria/Documents/GitHub/ReplicationRenault2020/")
+#os.chdir("C:/Users/ncardenafria/Documents/GitHub/ReplicationRenault2020/") 
+os.chdir("/Users/nataliacardenasf/Documents/GitHub/ReplicationRenault2020/CODE")
 
 #%% Connect to MongoDB and create the DB
 
@@ -42,7 +43,7 @@ except Exception as e:
     
 #create db 
 db = client['StockTwits']
-db['twits'].create_index([("id",  pymongo.ASCENDING)], unique=True)
+db['twits_v2'].create_index([("id",  pymongo.ASCENDING)], unique=True)
 
 
 #%% Define scrapping function for StockTwits
@@ -157,21 +158,21 @@ def scrapping(collection, tickers_list, last_day, t, error_t):
 
 
 #%% Call the function function
-stock_list = ["BRK.B", "JPM", "BAC", "MS", "WFC", "GS", "SCHW", "C", "UBS", "HSBC", "ING", "BCS", "DB", "BBVA", "BNPQY", "SMFG", "MUFG"]
-end_day = datetime(2009,12,31)
-t=0.02
-error_t = 15
-collect_mongo = db["twits"]
+# stock_list = ["BRK.B", "JPM", "BAC", "MS", "WFC", "GS", "SCHW", "C", "UBS", "HSBC", "ING", "BCS", "DB", "BBVA", "BNPQY", "SMFG", "MUFG"]
+# end_day = datetime(2009,12,31)
+# t=0.02
+# error_t = 15
+# collect_mongo = db["twits"]
 
-new_docs, time_ellapsed = scrapping(collect_mongo, stock_list, end_day, t, error_t) 
+# new_docs, time_ellapsed = scrapping(collect_mongo, stock_list, end_day, t, error_t) 
 # benchmarks = {'Bulk':{'time':time_ellapsed, "docs":new_docs}}
 
 #with open('REPORT/TABLES/benchmark_scrap.txt', 'w') as convert_file: 
 #    convert_file.write(json.dumps(benchmarks))
 
-stock_list = ["AAPLE","AMZN","FB","GOOG","MSFT" ]
+stock_list = ["AAPL","AMZN","FB","GOOG","MSFT","NVDA","TSLA"]
 end_day = datetime(2021,12,31)
-t=0.01
+t=0.005
 error_t = 15
 collect_mongo = db["twits_v2"]
 
