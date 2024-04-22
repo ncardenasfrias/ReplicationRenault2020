@@ -18,6 +18,7 @@ import pymongo
 from pymongo.mongo_client import MongoClient
 
 os.chdir("C:/Users/ncardenafria/Documents/GitHub/ReplicationRenault2020/")
+export_on = False
 
 #%% Connect to MongoDB and call the DB
 #mongodb password stocktwits
@@ -36,7 +37,7 @@ except Exception as e:
 ### Call the database
 db = client["StockTwits"]
 #call only what is needed, else it is going to be super heavy to load 
-df = pd.DataFrame(db["twits"].find({}))
+#df = pd.DataFrame(db["twits"].find({}))
 
 # Call only the first 100 documents -> test the function 
 dfx = pd.DataFrame(list(db["twits"].find({}).limit(100)))
@@ -72,7 +73,7 @@ def clean_content(text):
 #     dfx.loc[i,"c_content"] = clean_content(dfx.loc[i,"content"])
 # dfxx = dfx[["content", "c_content"]]
 
-#### UPDATE DATABASE
+#### UPDATE DATABASE: not working very well
 def get_c_content(collection, batch_size=10000):
     """
     Update the documents in a MongoDB collection by adding a new field 'c_content' with cleaned content.
@@ -99,7 +100,7 @@ def get_c_content(collection, batch_size=10000):
         print(i) #just to be able to follow in the console
 
 # Call the update function
-get_c_content(db["test"])
+#get_c_content(db["test"])
 
 
 
@@ -109,8 +110,7 @@ get_c_content(db["test"])
 db["twits"].count_documents({}) #1007170 docs
 
 # Get all the users from the collection
-cursor = db["twits"].find({}, {"user": 1})
-user_data = list(cursor)                            #list of dictionnaries
+user_data = list(db["twits"].find({}, {"user": 1}))                            #list of dictionnaries
 user_ids = [data["user"] for data in user_data]     #get only the ids
 len(list(set(user_ids))) #62832 unique users 
 
@@ -119,39 +119,59 @@ top_users = Counter(user_ids).most_common(628)
 top_users = pd.DataFrame(top_users[:100])
 
 # Plot 100 top users
-sns.set(style="whitegrid", palette="crest")
+if export_on:
+    sns.set(style="whitegrid", palette="crest")
+    plt.figure(figsize=(10, 6))
+    sns.barplot(x=0, y=1, data=top_users)
+    plt.xlabel('Users')
+    plt.ylabel('# twits in the sample')
+    plt.title('Top 100 users with the most twits in the database')
+    plt.xticks(rotation=90)  # Rotate x-axis labels for better readability
+    plt.gca().tick_params(axis='x', labelsize=6)  # Set font size for x-axis labels
+    plt.tight_layout()
+    plt.savefig('REPORT/IMAGES/bots_top100users.png')
+    plt.show()
 
-plt.figure(figsize=(10, 6))
-sns.barplot(x=0, y=1, data=top_users)
-plt.xlabel('Users')
-plt.ylabel('# twits in the sample')
-plt.title('Top 100 users with the most twits in the database')
-plt.xticks(rotation=90)  # Rotate x-axis labels for better readability
-plt.gca().tick_params(axis='x', labelsize=6)  # Set font size for x-axis labels
-plt.tight_layout()
-plt.savefig('REPORT/IMAGES/bots_top100users.png')
-plt.show()
 
-
-# select users with more tahn 5k messages ~ 0.5% of the sample 
+# select users with more than 5k messages ~ 0.5% of the sample 
 top_users = top_users[top_users[1] > 5000]
-top_users = list(top_users[0])
+len(top_users)                      #end up with 16 users to be removed
+top_users[1].sum()                  #247579 messages to be deleted
+top_users = list(top_users[0])                 
 
+#%% Update database 
+# get dummy bot, cleaned version of the data + dummy if the lenght text >= 3 as in the paper
 
-#### Update database 
 i=0
 for document in db["twits"].find():
     user = document["user"]
+    text = document["content"]
     is_bot = 1 if user in top_users else 0
+    cleaned = clean_content(text)
     db["twits"].update_one({"_id": document["_id"]}, {"$set": {"is_bot": is_bot}})
+    db["twits"].update_one({"_id": document["_id"]}, {"$set": {"c_content": cleaned}})
     #to follow 
     print(i)
     i+=1
 
 
-
-#%% get only messages with at least 3 words 
-
+i=0
+for document in db["test"].find({}):
+    user = document["user"]
+    text = document["content"]
+    n = len(list(text.split(" ")))
+    
+    is_bot = 1 if user in top_users else 0
+    n_three = 1 if n>=3 else 0
+    cleaned = clean_content(text)
+    
+    db["test"].update_one({"_id": document["_id"]}, {"$set": {"is_bot": is_bot}})
+    db["test"].update_one({"_id": document["_id"]}, {"$set": {"c_content": cleaned}})
+    db["test"].update_one({"_id": document["_id"]}, {"$set": {"n_three": n_three}})
+    
+    #to follow 
+    print(i)
+    i+=1
 
 
 
