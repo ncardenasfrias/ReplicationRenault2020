@@ -9,8 +9,10 @@ Pre-processing of the data
 import pandas as pd
 import os
 import re
-import time 
-from datetime import datetime
+from collections import Counter
+#Viz
+import seaborn as sns
+import matplotlib.pyplot as plt
 #Mongo DB 
 import pymongo 
 from pymongo.mongo_client import MongoClient
@@ -105,10 +107,51 @@ db["twits"].count_documents({})
 
 #%% Find bots and remove them from database
 
+db["twits"].count_documents({}) #1007170 docs
+
+# Get all the users from the collection
+cursor = db["twits"].find({}, {"user": 1})
+user_data = list(cursor)                            #list of dictionnaries
+user_ids = [data["user"] for data in user_data]     #get only the ids
+len(list(set(user_ids))) #62832 unique users 
+
+# Get 1% of users with highest frequencies
+top_users = Counter(user_ids).most_common(628)
+top_users = pd.DataFrame(top_users[:100])
+
+# Plot 100 top users
+sns.set(style="whitegrid", palette="crest")
+
+plt.figure(figsize=(10, 6))
+sns.barplot(x=0, y=1, data=top_users)
+plt.xlabel('Users')
+plt.ylabel('# twits in the sample')
+plt.title('Top 100 users with the most twits in the database')
+plt.xticks(rotation=90)  # Rotate x-axis labels for better readability
+plt.gca().tick_params(axis='x', labelsize=6)  # Set font size for x-axis labels
+plt.tight_layout()
+plt.savefig('REPORT/IMAGES/bots_top100users.png')
+plt.show()
+
+
+# select users with more tahn 5k messages ~ 0.5% of the sample 
+top_users = top_users[top_users[1] > 5000]
+top_users = list(top_users[0])
+
+
+#### Update database 
+for document in db["twits"].find():
+    user = document["user"]
+    is_bot = 1 if user in top_users else 0
+    # Update the document with the new field
+    db["twits"].update_one({"_id": document["_id"]}, {"$set": {"is_bot": is_bot}})
+
+
 
 
 
 #%% get only messages with at least 3 words 
+
 
 
 
