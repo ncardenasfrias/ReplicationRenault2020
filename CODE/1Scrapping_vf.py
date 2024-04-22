@@ -168,3 +168,11 @@ new_docs, time_ellapsed = scrapping(collect_mongo, stock_list, end_day, t, error
 
 #with open('REPORT/TABLES/benchmark_scrap.txt', 'w') as convert_file: 
 #    convert_file.write(json.dumps(benchmarks))
+
+stock_list = ["AAPLE","AMZN","FB","GOOG","MSFT" ]
+end_day = datetime(2021,12,31)
+t=0.01
+error_t = 15
+collect_mongo = db["twits_v2"]
+
+new_docs, time_ellapsed = scrapping(collect_mongo, stock_list, end_day, t, error_t) 

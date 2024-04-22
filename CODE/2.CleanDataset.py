@@ -46,10 +46,10 @@ except Exception as e:
 ### Call the database
 db = client["StockTwits"]
 #call only what is needed, else it is going to be super heavy to load 
-#df = pd.DataFrame(db["twits"].find({}))
+#df = pd.DataFrame(db["twits_v2"].find({}))
 
 # Call only the first 100 documents -> test the function 
-dfx = pd.DataFrame(list(db["twits"].find({}).limit(100)))
+dfx = pd.DataFrame(list(db["twits_v2"].find({}).limit(100)))
 
 #%% cashtag, linktag, usertag 
 
@@ -91,7 +91,7 @@ def get_c_content(collection, batch_size=10000):
     Parameters
     ----------
     collection : pymongo.collection.Collection
-        The MongoDB collection to update. Use db["twits"].
+        The MongoDB collection to update. Use db["twits_v2"].
 
     batch_size : int, optional
         The number of documents to process in each batch. Default is 10000.
@@ -116,10 +116,10 @@ def get_c_content(collection, batch_size=10000):
 
 #%% Find bots and remove them from database
 
-db["twits"].count_documents({}) #1007170 docs
+db["twits_v2"].count_documents({}) #1007170 docs
 
 # Get all the users from the collection
-user_data = list(db["twits"].find({}, {"user": 1}))                            #list of dictionnaries
+user_data = list(db["twits_v2"].find({}, {"user": 1}))                            #list of dictionnaries
 user_ids = [data["user"] for data in user_data]     #get only the ids
 len(list(set(user_ids))) #62832 unique users 
 
@@ -152,13 +152,13 @@ top_users = list(top_users[0])
 # get dummy bot, cleaned version of the data + dummy if the lenght text >= 3 as in the paper
 
 i=0
-for document in db["twits"].find():
+for document in db["twits_v2"].find():
     user = document["user"]
     text = document["content"]
     is_bot = 1 if user in top_users else 0
     cleaned = clean_content(text)
-    db["twits"].update_one({"_id": document["_id"]}, {"$set": {"is_bot": is_bot}})
-    db["twits"].update_one({"_id": document["_id"]}, {"$set": {"c_content": cleaned}})
+    db["twits_v2"].update_one({"_id": document["_id"]}, {"$set": {"is_bot": is_bot}})
+    db["twits_v2"].update_one({"_id": document["_id"]}, {"$set": {"c_content": cleaned}})
     #to follow 
     print(i)
     i+=1

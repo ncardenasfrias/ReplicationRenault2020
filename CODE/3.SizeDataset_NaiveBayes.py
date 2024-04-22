@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Machine Learning - Benchmark with Naive Bayes, 10-fold CV
+Replication of Table 1 of the paper. 
+Check on balanced and unbalanced data set AC and MCC of naive bayes with 10-fold CV for different sample sizes for the training dataset. 
 
 @author: ncardenafria
 """
@@ -30,7 +32,27 @@ try:
 except Exception as e:
     print(e)
     
+
+#%% Call data base
 db = client["StockTwits"]
+df = pd.DataFrame(list(db['twits'].find({"sentiment":{"$ne":""}})))
+
 #call only what is needed, else it is going to be super heavy to load 
-df = pd.DataFrame(db["twits"].find({}))
+#df = pd.DataFrame(db["twits"].find({}))
+
+#%% Get something balanced 
+
+#%% 500
+#%% 1000
+#%% 2500
+#%% 5000
+#%% 10000
+#%% 25000
+#%% 50000
+#%% 100000
+#%% 250000
+#%% 500000
+#%% 1000000
+
+
 
