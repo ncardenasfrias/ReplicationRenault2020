@@ -1,6 +1,15 @@
 # -*- coding: utf-8 -*-
 """
 Pre-processing of the data
+We process the data to: 
+    (i) replace all stock tickers, usernames, and urls by common words (cashtag, usertag and linktag respectivelly)
+    (ii) have messages in lower cases only 
+This cleaned version of the messages is stored in a new field in the data base "c_content".
+
+We also made sure to inspect the frequency of posts by user in our sample. In particualr we flagged as bots users whose messages represent over 0.5% of the overall sample. 
+They represent 16 users and shy of 250k messages. They are flagged by a field in the data base "is_bot" = 1
+
+Another field n_three is created to be able to retrieve messages with more of 3 words. It takes value 1 if it is the case.
 
 @author: ncardenafria
 """
