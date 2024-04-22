@@ -35,7 +35,7 @@ except Exception as e:
 
 #%% Call data base
 db = client["StockTwits"]
-df = pd.DataFrame(list(db['twits'].find({"sentiment":{"$ne":""}})))
+df = pd.DataFrame(list(db['twits_v2'].find({"sentiment":{"$ne":""}})))
 
 #call only what is needed, else it is going to be super heavy to load 
 #df = pd.DataFrame(db["twits"].find({}))
