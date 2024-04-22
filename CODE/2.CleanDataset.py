@@ -96,12 +96,11 @@ def get_c_content(collection, batch_size=10000):
         updates = [{"$set": {"c_content": clean_content(doc["content"])}} for doc in cursor]
         if updates:
             collection.bulk_write([pymongo.UpdateOne({"_id": doc["_id"]}, update) for doc, update in zip(cursor, updates)])
-
+        print(i) #just to be able to follow in the console
 
 # Call the update function
 get_c_content(db["test"])
 
-db["twits"].count_documents({})
 
 
 
@@ -140,13 +139,14 @@ top_users = list(top_users[0])
 
 
 #### Update database 
+i=0
 for document in db["twits"].find():
     user = document["user"]
     is_bot = 1 if user in top_users else 0
-    # Update the document with the new field
     db["twits"].update_one({"_id": document["_id"]}, {"$set": {"is_bot": is_bot}})
-
-
+    #to follow 
+    print(i)
+    i+=1
 
 
 
