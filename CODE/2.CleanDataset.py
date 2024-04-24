@@ -143,6 +143,7 @@ top_users = list(top_users[0])
 
 # Define a function for processing a subset of documents
 def process_subset(subset):
+    i=1
     for document in subset:
         user = document["user"]
         text = document["content"]
@@ -155,19 +156,12 @@ def process_subset(subset):
         db["twits_v2"].update_one({"_id": document["_id"]}, {"$set": {"is_bot": is_bot}})
         db["twits_v2"].update_one({"_id": document["_id"]}, {"$set": {"c_content": cleaned}})
         db["twits_v2"].update_one({"_id": document["_id"]}, {"$set": {"n_three": n_three}})
-        print(".")
+        print(i)
+        i+=1
 
-# Define the number of processes (computers) for parallel processing
-num_processes = 4  # Adjust according to available resources
 
-# Divide the dataset into smaller subsets
-subset_size = tot // num_processes
-# subsets = []
-# for i in range(num_processes):
-#     subset = list(db["twits_v2"].find().skip(i * subset_size).limit(subset_size))
-#     subsets.append(subset)
-
-nb_process = int(input("What process are we in? "))
-subset = list(db["twits_v2"].find({"sentiment": {"$ne": ""}}, {"content": 1, 'user':1, "_id": 1}).skip(nb_process * subset_size).limit(subset_size))
-
+subset = list(db["twits_v2"].find({"sentiment": {"$ne": ""}}, {"content": 1, 'user':1, "_id": 1}))
 process_subset(subset)
+
+subset_2 = list(db["twits_v2"].find({"sentiment": {"$in": [""]}}, {"content": 1, 'user':1, "_id": 1}))
+process_subset(subset_2)
