@@ -103,6 +103,11 @@ for i in [500,1000]:
      results_bal.append({'Sample Size': i, 'Accuracy': acc_mean, 'MCC': mcc_mean, "Time":f"{m} min, {s} sec"})
     
     
-    
+#%% Results
+results = df.DataFrame(results)
+results_bal = df.DataFrame(results_bal)
+
+print(results.to_latex(index=False))
+print(results_bal.to_latex(index=False))
 
 

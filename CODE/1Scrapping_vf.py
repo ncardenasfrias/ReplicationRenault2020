@@ -178,7 +178,6 @@ def scrapping(collection, tickers_list, last_day, t, error_t):
 #    convert_file.write(json.dumps(benchmarks))
 
 stock_list = ["AAPL","AMZN","FB","GOOG","MSFT","NVDA","TSLA"]
-stock_list = ["GOOG","MSFT","NVDA"]
 end_day = datetime(2021,12,31)
 t=0.005
 error_t = 15

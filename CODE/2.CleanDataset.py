@@ -29,7 +29,7 @@ from pymongo.mongo_client import MongoClient
 os.chdir("C:/Users/ncardenafria/Documents/GitHub/ReplicationRenault2020/")
 export_on = False
 
-#%% Connect to MongoDB and call the DB
+#%% Connect to MongoDB 
 #mongodb password stocktwits
 uri = "mongodb+srv://nataliacardenas:stocktwits@twits.mgv4dfh.mongodb.net/?retryWrites=true&w=majority&appName=Twits"
 
@@ -43,13 +43,15 @@ try:
 except Exception as e:
     print(e)
  
-### Call the database
+#%% Call the database
 db = client["StockTwits"]
-#call only what is needed, else it is going to be super heavy to load 
-#df = pd.DataFrame(db["twits_v2"].find({}))
 
 # Call only the first 100 documents -> test the function 
-dfx = pd.DataFrame(list(db["twits_v2"].find({}).limit(100)))
+#dfx = pd.DataFrame(list(db["twits_v2"].find({}).limit(100)))
+
+#call only what is needed, else it is going to be super heavy to load 
+#df = pd.DataFrame(db["twits"].find({"sentiment": {"$ne": ""}}, {"content": 1, 'user':1, "_id": 1}))
+
 
 #%% cashtag, linktag, usertag 
 
@@ -82,49 +84,18 @@ def clean_content(text):
 #     dfx.loc[i,"c_content"] = clean_content(dfx.loc[i,"content"])
 # dfxx = dfx[["content", "c_content"]]
 
-#### UPDATE DATABASE: not working very well
-def get_c_content(collection, batch_size=10000):
-    """
-    Update the documents in a MongoDB collection by adding a new field 'c_content' with cleaned content.
-    Split upload in batches of size 10000 to avoid having DocumentTooLarge error with bulk update
-
-    Parameters
-    ----------
-    collection : pymongo.collection.Collection
-        The MongoDB collection to update. Use db["twits_v2"].
-
-    batch_size : int, optional
-        The number of documents to process in each batch. Default is 10000.
-
-    Returns
-    -------
-    None
-    """
-    total_docs = collection.count_documents({})
-    for i in range(0, total_docs, batch_size):
-        cursor = list(collection.find({}, skip=i, limit=batch_size))
-        updates = [{"$set": {"c_content": clean_content(doc["content"])}} for doc in cursor]
-        if updates:
-            collection.bulk_write([pymongo.UpdateOne({"_id": doc["_id"]}, update) for doc, update in zip(cursor, updates)])
-        print(i) #just to be able to follow in the console
-
-# Call the update function
-#get_c_content(db["test"])
-
-
-
 
 #%% Find bots and remove them from database
 
-db["twits_v2"].count_documents({}) #1007170 docs
+tot = db["twits_v2"].count_documents({}) #2 236 664 docs
 
 # Get all the users from the collection
 user_data = list(db["twits_v2"].find({}, {"user": 1}))                            #list of dictionnaries
 user_ids = [data["user"] for data in user_data]     #get only the ids
-len(list(set(user_ids))) #62832 unique users 
+len(list(set(user_ids))) #91555 unique users 
 
 # Get 1% of users with highest frequencies
-top_users = Counter(user_ids).most_common(628)
+top_users = Counter(user_ids).most_common(915) # 1% top users
 top_users = pd.DataFrame(top_users[:100])
 
 # Plot 100 top users
@@ -142,54 +113,61 @@ if export_on:
     plt.show()
 
 
-# select users with more than 5k messages ~ 0.5% of the sample 
+# select users with more than 5k messages ~ 0.25% of the sample 
 top_users = top_users[top_users[1] > 5000]
-len(top_users)                      #end up with 16 users to be removed
-top_users[1].sum()                  #247579 messages to be deleted
+len(top_users)                      #end up with 12 users to be removed
+top_users[1].sum()                  #134234 messages to be deleted
 top_users = list(top_users[0])                 
 
 #%% Update database 
 # get dummy bot, cleaned version of the data + dummy if the lenght text >= 3 as in the paper
 
-i=0
-for document in db["twits_v2"].find():
-    user = document["user"]
-    text = document["content"]
-    is_bot = 1 if user in top_users else 0
-    cleaned = clean_content(text)
-    db["twits_v2"].update_one({"_id": document["_id"]}, {"$set": {"is_bot": is_bot}})
-    db["twits_v2"].update_one({"_id": document["_id"]}, {"$set": {"c_content": cleaned}})
-    #to follow 
-    print(i)
-    i+=1
-
-
-i=0
-for document in db["test"].find({}):
-    user = document["user"]
-    text = document["content"]
-    n = len(list(text.split(" ")))
+# i=0
+# for document in db["test"].find({}):
+#     user = document["user"]
+#     text = document["content"]
+#     n = len(list(text.split(" ")))
     
-    is_bot = 1 if user in top_users else 0
-    n_three = 1 if n>=3 else 0
-    cleaned = clean_content(text)
+#     is_bot = 1 if user in top_users else 0
+#     n_three = 1 if n>=3 else 0
+#     cleaned = clean_content(text)
     
-    db["test"].update_one({"_id": document["_id"]}, {"$set": {"is_bot": is_bot}})
-    db["test"].update_one({"_id": document["_id"]}, {"$set": {"c_content": cleaned}})
-    db["test"].update_one({"_id": document["_id"]}, {"$set": {"n_three": n_three}})
+#     db["test"].update_one({"_id": document["_id"]}, {"$set": {"is_bot": is_bot}})
+#     db["test"].update_one({"_id": document["_id"]}, {"$set": {"c_content": cleaned}})
+#     db["test"].update_one({"_id": document["_id"]}, {"$set": {"n_three": n_three}})
     
-    #to follow 
-    print(i)
-    i+=1
+#     #to follow 
+#     print(i)
+#     i+=1
 
 
+# Define a function for processing a subset of documents
+def process_subset(subset):
+    for document in subset:
+        user = document["user"]
+        text = document["content"]
+        n = len(list(text.split(" ")))
+        
+        is_bot = 1 if user in top_users else 0
+        cleaned = clean_content(text)
+        n_three = 1 if n>=3 else 0
+        
+        db["twits_v2"].update_one({"_id": document["_id"]}, {"$set": {"is_bot": is_bot}})
+        db["twits_v2"].update_one({"_id": document["_id"]}, {"$set": {"c_content": cleaned}})
+        db["twits_v2"].update_one({"_id": document["_id"]}, {"$set": {"n_three": n_three}})
+        print(".")
 
+# Define the number of processes (computers) for parallel processing
+num_processes = 4  # Adjust according to available resources
 
-#%% Organize messages by date ie 4pm t-1 to 4pm t 
+# Divide the dataset into smaller subsets
+subset_size = tot // num_processes
+# subsets = []
+# for i in range(num_processes):
+#     subset = list(db["twits_v2"].find().skip(i * subset_size).limit(subset_size))
+#     subsets.append(subset)
 
+nb_process = int(input("What process are we in? "))
+subset = list(db["twits_v2"].find({"sentiment": {"$ne": ""}}, {"content": 1, 'user':1, "_id": 1}).skip(nb_process * subset_size).limit(subset_size))
 
-
-
-
-
-#%% Force balanced database 
+process_subset(subset)
