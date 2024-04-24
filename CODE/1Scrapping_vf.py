@@ -23,7 +23,7 @@ import requests
 
 
 #os.chdir("C:/Users/ncardenafria/Documents/GitHub/ReplicationRenault2020/") 
-os.chdir("/Users/nataliacardenasf/Documents/GitHub/ReplicationRenault2020/CODE")
+#os.chdir("/Users/nataliacardenasf/Documents/GitHub/ReplicationRenault2020/CODE")
 
 #%% Connect to MongoDB and create the DB
 
@@ -89,6 +89,7 @@ def scrapping(collection, tickers_list, last_day, t, error_t):
         maxid = None
         
         while True:
+            broken=False
 
             if maxid is None:                                                  #get latest batch of twits
                 url = f"https://api.stocktwits.com/api/2/streams/symbol/{tick}.json"
@@ -132,11 +133,17 @@ def scrapping(collection, tickers_list, last_day, t, error_t):
                
                 try:                                                           #push into mongo db, will only work if id is unique/not already present in the db
                     collection.insert_one({"id":twitid, "date":date, "content":content , "sentiment":sentiment, "user":user, 'symbol':symbols})
+                    print('ok')
                 except: 
                     pass
-            
-            if date < last_day:                                                #break if beyond desired cutoff date
-                break 
+                if date<last_day:
+                    broken=True
+                    break
+                
+            if broken: 
+                break
+            #if date < last_day:                                                #break if beyond desired cutoff date
+             #   break 
 
             if maxid == None:                                                  #BBVA error, last json is empty, no maxid
                 break
@@ -171,6 +178,7 @@ def scrapping(collection, tickers_list, last_day, t, error_t):
 #    convert_file.write(json.dumps(benchmarks))
 
 stock_list = ["AAPL","AMZN","FB","GOOG","MSFT","NVDA","TSLA"]
+stock_list = ["GOOG","MSFT","NVDA"]
 end_day = datetime(2021,12,31)
 t=0.005
 error_t = 15
