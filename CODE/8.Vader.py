@@ -8,6 +8,7 @@ Machine Learning - Other Algorithms
 #Basic packages 
 import pandas as pd
 import os
+import datetime
 import time 
 #Mongo DB 
 import pymongo 
@@ -76,15 +77,28 @@ end = time.time()
 
 time_delta = end-start 
 
-vader = {"Model":"Vader", "Accuracy":round(vader_ac*100,3), "Time":f"{time_delta} sec"}
+vader_tab = {"Model":"Vader", "Accuracy":round(vader_ac*100,3), "Time":f"{round(time_delta,2)} sec"}
+vader_tab= pd.DataFrame([vader_tab])
+with open('REPORT/TABLES/vader.tex', 'w') as tf:
+    tf.write(vader_tab.to_latex(index=False, 
+                     caption="Vader - Performance",
+                     label="tab:vader"))
 
-#%% update database
-i=0
-for document in db["twits_v2"].find({}):
-    content = document["content"]
-    vader = vader_sentiment(content)
-    
-    db["twits_v2"].update_one({"_id": document["_id"]}, {"$set": {"vader": vader}})
-    #to follow 
-    print(i)
-    i+=1
+#%% update database since 2023
+
+sample = pd.DataFrame(list(db["twits_v2"].find({"date": {"$gte": datetime.datetime(2023,1,1)}}, {"c_content": 1,"_id": 1})))
+
+def update_vader(sample):
+    i = 0
+    for document in sample:
+        content = document["c_content"]
+        sent = vader_sentiment(content)
+        
+        db["twits_v2"].update_one({"_id": document["_id"]}, {"$set": {"vader": sent}})
+        
+        print(i)
+        i += 1
+
+update_vader(sample)
+
+
