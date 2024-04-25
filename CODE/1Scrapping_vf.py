@@ -184,3 +184,12 @@ error_t = 15
 collect_mongo = db["twits_v2"]
 
 new_docs, time_ellapsed = scrapping(collect_mongo, stock_list, end_day, t, error_t) 
+
+
+db["twits_v2"].count_documents({"symbol":"AAPL"}) #392379
+db["twits_v2"].count_documents({"symbol":"META"}) #329887
+db["twits_v2"].count_documents({"symbol":"AMZN"}) #387629
+db["twits_v2"].count_documents({"symbol":"MSFT"}) #185762
+db["twits_v2"].count_documents({"symbol":"GOOG"}) #82565
+db["twits_v2"].count_documents({"symbol":"NVDA"}) #722482
+db["twits_v2"].count_documents({"symbol":"TSLA"}) #435889

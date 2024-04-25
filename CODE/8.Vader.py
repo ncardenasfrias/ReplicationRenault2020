@@ -9,7 +9,6 @@ Machine Learning - Other Algorithms
 import pandas as pd
 import os
 import time 
-from datetime import datetime
 #Mongo DB 
 import pymongo 
 from pymongo.mongo_client import MongoClient
@@ -18,6 +17,8 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 #sklearn
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+#balanced sample 
+from imblearn.under_sampling import RandomUnderSampler
 
 os.chdir("C:/Users/ncardenafria/Documents/GitHub/ReplicationRenault2020/")
 
@@ -34,23 +35,26 @@ try:
     print("Pinged your deployment. You successfully connected to MongoDB!")
 except Exception as e:
     print(e)
-    
+
+
+#%% call the database
 db = client["StockTwits"]
-#call only what is needed, else it is going to be super heavy to load 
-#df = pd.DataFrame(db["test"].find({}))
+df = pd.DataFrame(list(db['twits_v2'].find({"sentiment": {"$ne": ""}, "n_three": 1, "is_bot": 0}, {"c_content": 1, "sentiment": 1})))
 
-df = pd.DataFrame(list(db['twits'].find({"sentiment":{"$ne":""}})))
+df.head(1)
+df.columns
+df["sentiment"].isna().sum()         # 0, only entries with declared sentiment 
 
-db["twits_v2"].count_documents({"symbol":"AAPL"}) #367588
-db["twits_v2"].count_documents({"symbol":"META"}) #127111
-db["twits_v2"].count_documents({"symbol":"AMZN"}) #150429
-db["twits_v2"].count_documents({"symbol":"MSFT"}) #59031
-db["twits_v2"].count_documents({"symbol":"GOOG"}) #72912
-db["twits_v2"].count_documents({"symbol":"NVDA"}) #39577
-db["twits_v2"].count_documents({"symbol":"TSLA"}) #66369
+full_sample = len(df)                       # 923638 entries
+full_positive = len(df[df["sentiment"]==1]) # 580658, 62.87%
+full_negative = len(df[df["sentiment"]==-1]) # 342980, 37.13%
 
 
+#%% Get balanced data set, sample =250k
+sampler = RandomUnderSampler(sampling_strategy={-1: 125000, 1: 125000})
+X_bal, y_bal = sampler.fit_resample(df['c_content'].values.reshape(-1, 1),df["sentiment"])
 
+#%% Vader Sentiment
 vader = SentimentIntensityAnalyzer()
 
 def vader_sentiment(content_field):
@@ -61,9 +65,20 @@ def vader_sentiment(content_field):
         sent = -1
     return sent
 
-df = pd.DataFrame(list(db["twits_v2"].find({"sentiment":{"$ne":""}})))
-x_train, x_test, y_train, y_test = train_test_split(df['content'], df["sentiment"], random_state=1234, test_size=0.2)
+#%% Get Accuracy
+x_train, x_test, y_train, y_test = train_test_split(X_bal, y_bal, random_state=3456, test_size=0.2)
 
+y_fit = [vader_sentiment(i) for i in x_test]
+
+start = time.time()
+vader_ac = accuracy_score(y_test, y_fit) 
+end = time.time()
+
+time_delta = end-start 
+
+vader = {"Model":"Vader", "Accuracy":round(vader_ac*100,3), "Time":f"{time_delta} sec"}
+
+#%% update database
 i=0
 for document in db["twits_v2"].find({}):
     content = document["content"]
