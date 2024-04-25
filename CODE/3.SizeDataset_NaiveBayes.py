@@ -42,53 +42,73 @@ except Exception as e:
 
 #%% Call data base : only entries with declared sentiment
 db = client["StockTwits"]
-df = pd.DataFrame(list(db['twits_v2'].find({"sentiment":{"$ne":""}})))
+df = pd.DataFrame(list(db['twits_v2'].find({"sentiment": {"$ne": ""}, "n_three": 1, "is_bot": 0}, {"c_content": 1, "sentiment": 1})))
 
-#call only what is needed, else it is going to be super heavy to load 
-#df = pd.DataFrame(db["twits"].find({}))
+df.head(1)
+df.columns
+df["sentiment"].isna().sum()         # 0, only entries with declared sentiment 
 
-#%% Count Vectorizer 
-vect = CountVectorizer()
-X = vect.fit_transform(df["content"])
+full_sample = len(df)                       # 923638 entries
+full_positive = len(df[df["sentiment"]==1]) # 580658, 62.87%
+full_negative = len(df[df["sentiment"]==-1]) # 342980, 37.13%
 
 
-#%% Unbalanced
+#%% Count Vectorizer : need to transform text into numerical input
+#paper removes stop words with default in CVect + ignore punctuation (default does so)
+vect = CountVectorizer(stop_words="english")
+X = vect.fit_transform(df["c_content"]) #we get a huge sparse matrix 
+
+
+#%% Naives Bayes: default parameters
 bayes = MultinomialNB(alpha=1.0, fit_prior=True, class_prior=None)
 
-results = []
-for i in [500,1000]: 
-     start_t = time.time()
-     X_train, X_test, y_train, y_test = train_test_split(X, df['sentiment'],
-                                                         random_state=1234,
-                                                         train_size=i, test_size=0.2)
+#%% Unbalanced
 
+results = []
+for i in [500,1000,2500,5000,10000,25000,50000,100000,250000,500000,full_sample]: 
+     start_t = time.time()                                                     
+     
+     if i != full_sample:
+         X_train, X_test, y_train, y_test = train_test_split(X, df['sentiment'],
+                                                             random_state=3456,
+                                                             train_size=i, test_size=0.2)
+     else:
+         X_train, X_test, y_train, y_test = train_test_split(X, df['sentiment'],
+                                                             random_state=3456,
+                                                             test_size=0.2)
+
+    #get 10-fold CV scores
      scoring = {"acc":"accuracy", 'mcc': 'matthews_corrcoef'}
      scores = cross_validate(bayes, X_train, y_train, scoring=scoring, cv=10, return_train_score=True)
      acc_mean = round(scores['test_acc'].mean(), 3)
      mcc_mean = round(scores['test_mcc'].mean(),3)
      
+     # get time for benchmarking
      end_t = time.time()
-     delta_t = end_t-start_t
-     m = delta_t // 60
-     s = round(delta_t % 60, 1)
+     delta_t = end_t-start_t 
+     s = round(delta_t, 1)
 
-     results.append({'Sample Size': i, 'Accuracy': acc_mean, 'MCC': mcc_mean, "Time":f"{m} min, {s} sec"})
+     results.append({'Sample Size': i, 'Accuracy': acc_mean, 'MCC': mcc_mean, "Time":f"{s} sec"})
     
 
 #%% Balanced 
 
-min(db["twits_v2"].count_documents({"sentiment":1}), db["twits_v2"].count_documents({"sentiment":-1}))
 sampler = RandomUnderSampler(sampling_strategy='majority')
 X_bal, y_bal = sampler.fit_resample(X,df["sentiment"])
 
-len(y_bal) == 2*min(db["twits_v2"].count_documents({"sentiment":1}), db["twits_v2"].count_documents({"sentiment":-1}))
+len(y_bal) == 2*min(full_positive, full_negative) #685960
 
 results_bal = []
-for i in [500,1000]: 
+for i in [500,1000,2500,5000,10000,25000,50000,100000,250000,500000,len(y_bal)]: 
      start_t = time.time()
-     X_train, X_test, y_train, y_test = train_test_split(X_bal, y_bal,
-                                                         random_state=1234,
-                                                         train_size=i, test_size=0.2)
+     if i != len(y_bal):
+         X_train, X_test, y_train, y_test = train_test_split(X_bal, y_bal,
+                                                             random_state=3456,
+                                                             train_size=i, test_size=0.2)
+     else:
+         X_train, X_test, y_train, y_test = train_test_split(X_bal, y_bal,
+                                                             random_state=3456,
+                                                             test_size=0.2)
 
      scoring = {"acc":"accuracy", 'mcc': 'matthews_corrcoef'}
      scores = cross_validate(bayes, X_train, y_train, scoring=scoring, cv=10, return_train_score=True)
@@ -97,17 +117,24 @@ for i in [500,1000]:
      
      end_t = time.time()
      delta_t = end_t-start_t
-     m = delta_t // 60
-     s = round(delta_t % 60, 1)
+     s = round(delta_t, 1)
 
-     results_bal.append({'Sample Size': i, 'Accuracy': acc_mean, 'MCC': mcc_mean, "Time":f"{m} min, {s} sec"})
+     results_bal.append({'Sample Size': i, 'Accuracy': acc_mean, 'MCC': mcc_mean, "Time":f"{s} sec"})
     
     
 #%% Results
-results = df.DataFrame(results)
-results_bal = df.DataFrame(results_bal)
+results = pd.DataFrame(results)
+results_bal = pd.DataFrame(results_bal)
 
-print(results.to_latex(index=False))
-print(results_bal.to_latex(index=False))
+with open('REPORT/TABLES/unabal_size.tex', 'w') as tf:
+     tf.write(results.to_latex(index=False, 
+                 caption="Size of the dataset and classification accuracy - Unbalanced Dataset", 
+                 label="tab:unbal_size")) 
+
+with open('REPORT/TABLES/bal_size.tex', 'w') as tf:
+    tf.write(results_bal.to_latex(index=False, 
+                     caption="Size of the dataset and classification accuracy - Balanced Dataset",
+                     label="tab:bal_size"))
+                     
 
 
