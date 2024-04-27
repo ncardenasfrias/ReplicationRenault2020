@@ -125,6 +125,8 @@ for i in [500,1000,2500,5000,10000,25000,50000,100000,250000,500000,len(y_bal)]:
 #%% Results
 results = pd.DataFrame(results)
 results_bal = pd.DataFrame(results_bal)
+results.to_csv("REPORT/TABLES/unbal_size.tex")
+results_bal.to_csv("REPORT/TABLES/bal_size.tex")
 
 with open('REPORT/TABLES/unabal_size.tex', 'w') as tf:
      tf.write(results.to_latex(index=False, 

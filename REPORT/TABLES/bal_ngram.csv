@@ -1,0 +1,5 @@
+,Ngrams,Accuracy,MCC,Time
+0,Unigrams,0.731,0.462,3.0 sec
+1,Unigrams + Bigrams,0.76,0.52,8.3 sec
+2,Unigrams + Bigrams + Trigrams,0.763,0.526,16.8 sec
+3,Unigrams + Bigrams + Trigrams + 4-grams,0.761,0.522,30.3 sec
