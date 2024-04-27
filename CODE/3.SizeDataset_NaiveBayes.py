@@ -22,8 +22,13 @@ from sklearn.metrics import accuracy_score, matthews_corrcoef
 from sklearn.feature_extraction.text import CountVectorizer
 #balanced sample 
 from imblearn.under_sampling import RandomUnderSampler
+#Viz 
+import seaborn as sns
+sns.set(style="whitegrid")
+import matplotlib.pyplot as plt
 
 os.chdir("C:/Users/ncardenafria/Documents/GitHub/ReplicationRenault2020/")
+export_on=False
 
 #%% Connect to MongoDB and call the DB
 #mongodb password stocktwits
@@ -125,18 +130,54 @@ for i in [500,1000,2500,5000,10000,25000,50000,100000,250000,500000,len(y_bal)]:
 #%% Results
 results = pd.DataFrame(results)
 results_bal = pd.DataFrame(results_bal)
-results.to_csv("REPORT/TABLES/unbal_size.tex")
-results_bal.to_csv("REPORT/TABLES/bal_size.tex")
+results.to_csv("REPORT/TABLES/unbal_size.csv")
+results_bal.to_csv("REPORT/TABLES/bal_size.csv")
 
-with open('REPORT/TABLES/unabal_size.tex', 'w') as tf:
-     tf.write(results.to_latex(index=False, 
-                 caption="Size of the dataset and classification accuracy - Unbalanced Dataset", 
-                 label="tab:unbal_size")) 
-
-with open('REPORT/TABLES/bal_size.tex', 'w') as tf:
-    tf.write(results_bal.to_latex(index=False, 
-                     caption="Size of the dataset and classification accuracy - Balanced Dataset",
-                     label="tab:bal_size"))
+if export_on:
+    with open('REPORT/TABLES/unabal_size.tex', 'w') as tf:
+         tf.write(results.to_latex(index=False, 
+                     caption="Size of the dataset and classification accuracy - Unbalanced Dataset", 
+                     label="tab:unbal_size")) 
+    
+    with open('REPORT/TABLES/bal_size.tex', 'w') as tf:
+        tf.write(results_bal.to_latex(index=False, 
+                         caption="Size of the dataset and classification accuracy - Balanced Dataset",
+                         label="tab:bal_size"))
                      
+# Plot results
+melted_results = results.melt(id_vars='Sample Size', var_name='Metric', value_name='Score')
+melted_results = melted_results[melted_results["Metric"].isin(["Accuracy", "MCC"])]
 
+melted_results_bal = results.melt(id_vars='Sample Size', var_name='Metric', value_name='Score')
+melted_results_bal = melted_results[melted_results["Metric"].isin(["Accuracy", "MCC"])]
 
+if export_on:
+##unbalanced
+    plt.figure(figsize=(10, 6))
+    sns.barplot(data=melted_results, x="Sample Size", y="Score", hue="Metric", palette="crest")
+    
+    plt.xlabel("Sample size")
+    plt.ylabel("Score")
+    plt.title("Size of the unbalanced dataset and classification accuracy")
+    custom_labels = [500,1000,2500,5000,10000,25000,50000,100000,250000,500000,full_sample]
+    plt.gca().set_xticklabels(custom_labels)
+    plt.xticks(rotation=0)
+
+    plt.legend()
+   # plt.show()
+    plt.savefig('REPORT/IMAGES/unbal_size.png', bbox_inches='tight')
+
+##balanced
+    plt.figure(figsize=(10, 6))
+    sns.barplot(data=melted_results_bal, x="Sample Size", y="Score", hue="Metric", palette="crest")
+    
+    plt.xlabel("Sample size")
+    plt.ylabel("Score")
+    plt.title("Size of the balanced dataset and classification accuracy")
+    custom_labels = [500,1000,2500,5000,10000,25000,50000,100000,250000,500000,len(y_bal)]
+    plt.gca().set_xticklabels(custom_labels)
+    plt.xticks(rotation=0)
+
+    plt.legend()
+   # plt.show()
+    plt.savefig('REPORT/IMAGES/bal_size.png', bbox_inches='tight')

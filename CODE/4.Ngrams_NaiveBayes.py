@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Machine Learning - Other Algorithms
+Machine Learning - Effect of using different ranges of n-grams
+Replication Table 2 of the paper, use balanced 250k sample and test on AC and MCC using 10-fold CV Naive Bayes 
 
 @author: ncardenafria
 """
