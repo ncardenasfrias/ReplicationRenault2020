@@ -46,12 +46,6 @@ except Exception as e:
 #%% Call the database
 db = client["StockTwits"]
 
-# Call only the first 100 documents -> test the function 
-#dfx = pd.DataFrame(list(db["twits_v2"].find({}).limit(100)))
-
-#call only what is needed, else it is going to be super heavy to load 
-#df = pd.DataFrame(db["twits"].find({"sentiment": {"$ne": ""}}, {"content": 1, 'user':1, "_id": 1}))
-
 
 #%% cashtag, linktag, usertag 
 
