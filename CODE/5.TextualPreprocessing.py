@@ -5,13 +5,46 @@ Machine Learning - Other Algorithms
 @author: ncardenafria
 """
 
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
+from nltk import pos_tag
+import emoji
+import re
+from pymongo import MongoClient
+import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_validate
+import string
+
 # Connect to MongoDB
-uri = "mongodb+srv://nataliacardenas:stocktwits@twits.mgv4dfh.mongodb.net/?retryWrites=true&w=majority&appName=Twits"
-client = MongoClient(uri)
+client = MongoClient("mongodb+srv://nataliacardenas:stocktwits@twits.mgv4dfh.mongodb.net/?retryWrites=true&w=majority&appName=Twits")
 db = client["StockTwits"]
 df = pd.DataFrame(list(db["twits"].find({"sentiment": {"$ne": ""}}, {"content": 1, "sentiment": 1})))
+
 nltk.download('averaged_perceptron_tagger')
 nltk.download('punkt')
+nltk.download('stopwords')
+
+def remove_punctuation(text):
+    translator = str.maketrans('', '', string.punctuation)
+    return text.translate(translator)
+
+def stem_text(text):
+    ps = PorterStemmer()
+    return ' '.join([ps.stem(word) for word in word_tokenize(text)])
+
+def handle_emojis(text):
+    text = emoji.demojize(text)
+    text = text.replace(':', ' ')
+    return text
+
+def remove_stopwords(text):
+    stop_words = set(stopwords.words('english'))
+    return ' '.join([word for word in word_tokenize(text) if word.lower() not in stop_words])
 
 def apply_pos_tags(text):
     words = word_tokenize(text)
@@ -34,7 +67,7 @@ def preprocess_train_evaluate(preprocess_fn, df, vectorizer, model):
     mcc = scores['test_matthews_corrcoef'].mean()
     return accuracy, mcc
 
-vect = CountVectorizer(stop_words="english") 
+vect = CountVectorizer(stop_words="english")
 bayes = MultinomialNB()
 
 results = {}
