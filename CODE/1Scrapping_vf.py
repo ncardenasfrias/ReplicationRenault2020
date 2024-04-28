@@ -193,3 +193,4 @@ db["twits_v2"].count_documents({"symbol":"MSFT"}) #185762
 db["twits_v2"].count_documents({"symbol":"GOOG"}) #82565
 db["twits_v2"].count_documents({"symbol":"NVDA"}) #722482
 db["twits_v2"].count_documents({"symbol":"TSLA"}) #435889
+
