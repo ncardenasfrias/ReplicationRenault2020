@@ -201,10 +201,116 @@ print(f"SVM (Support Vector Machine) - Accuracy: {accuracy_svm}\nReport:\n{repor
 
 #%% Random Forest
 
+import time
+import pandas as pd
+from pymongo import MongoClient
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report
+
+# Start timing
+start_time = time.time()
+
+# MongoDB Connection URI
+uri = "mongodb+srv://nataliacardenas:stocktwits@twits.mgv4dfh.mongodb.net/?retryWrites=true&w=majority&appName=Twits"
+
+# Using 'with' statement for safe connection handling
+with MongoClient(uri) as client:
+    db = client["StockTwits"]
+    collection = db["twits"]
+
+    # Fetching data
+    cursor = collection.find({}, {'content': 1, 'sentiment': 1})
+    df = pd.DataFrame(list(cursor))
+
+# Preprocessing
+vectorizer = TfidfVectorizer(max_features=1000)
+X = vectorizer.fit_transform(df['content'])
+y = pd.to_numeric(df['sentiment'], errors='coerce').fillna(0).astype(int)
+
+# Data splitting
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Random Forest model
+model = RandomForestClassifier()
+model.fit(X_train, y_train)
+predictions = model.predict(X_test)
+
+# Evaluation
+accuracy = accuracy_score(y_test, predictions)
+report = classification_report(y_test, predictions)
+
+# Display results
+print(f"Random Forest - Accuracy: {accuracy}\nReport:\n{report}")
+
+# End timing and print elapsed time
+elapsed_time = time.time() - start_time
+print(f"Elapsed time: {elapsed_time} seconds")
+
+    
+    
+ 
 
 
 #%% Multilayer Perceptron 
 
+import pandas as pd
+import pymongo
+from pymongo import MongoClient
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import accuracy_score, classification_report
+
+# MongoDB Connection
+uri = "mongodb+srv://nataliacardenas:stocktwits@twits.mgv4dfh.mongodb.net/?retryWrites=true&w=majority&appName=Twits"
+
+client = MongoClient(uri)
+db = client["StockTwits"]
+collection = db["twits"]
+
+# Fetching data
+cursor = collection.find({}, {'content': 1, 'sentiment': 1})
+df = pd.DataFrame(list(cursor))
+
+# Ensure MongoDB connection is closed
+client.close()
+
+# Preprocessing
+vectorizer = TfidfVectorizer(max_features=1000)
+X = vectorizer.fit_transform(df['content'])
+y = pd.to_numeric(df['sentiment'], errors='coerce').fillna(0).astype(int)  # Ensuring sentiment is numeric
+
+# Data splitting
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Models definition
+models = {
+  
+       'MLP Classifier': MLPClassifier()
+
+}
+
+# Train and evaluate models
+results = {}
+for name, model in models.items():
+    model.fit(X_train, y_train)
+    predictions = model.predict(X_test)
+    accuracy = accuracy_score(y_test, predictions)
+    report = classification_report(y_test, predictions)
+    results[name] = {'accuracy': accuracy, 'report': report}
+
+# Display results
+for model_name, result in results.items():
+    print(f"{model_name} - Accuracy: {result['accuracy']}\nReport:\n{result['report']}")
+    
+    
+ 
 
 
-#%% Neural Networks
+
