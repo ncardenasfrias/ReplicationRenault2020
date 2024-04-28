@@ -4,9 +4,7 @@ Replication work of "Sentiment analysis and machine learning in finance: a compa
 FTD - Applied Big Data Analytics for Finance
 
 
-In this repository, we replicate the findings of Renault (2020) using a new dataset of messages published on the StockTwits platform about financial institutions' stocks. All of them are traded on the NYSE.
-
-This repository contains all the code files (in Python) needed to replicate our results, extracts of the data used and the elements of a report on our findings. 
+In this repository, we replicate the findings of Renault (2020) it contains all the code files (in Python) needed to replicate our results, extracts of the data used and the elements of a report on our findings. 
 
 
  
